@@ -34,9 +34,22 @@
     }
     #phrase {
       margin-top: 20px;
-      font-size: 1rem;
+      font-size: 2rem;
       color: #777;
       font-style: italic;
+    }
+
+        /* フレーズのスタイル */
+    .phrase-box {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 20px 40px;
+      font-size: 2rem; /* 文字を大きく */
+      font-weight: bold;
+      color: #fff;
+      background-color: #4caf50; /* 緑色の背景 */
+      border-radius: 15px; /* 角丸 */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 影を追加 */
     }
 
     /* ボタンのスタイル */
@@ -47,6 +60,19 @@
       align-items: center;
       gap: 10px;
     }
+
+            /* フレーズのスタイル */
+            .phrase-box {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 20px 0;
+            border-radius: 15px; /* 角丸 */
+            background-color: #f0f0f0; /* 背景色 */
+            font-size: 1.5em; /* 文字サイズを大きく */
+            font-weight: bold;
+            color: #333; /* 文字色 */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 影を追加 */
+        }
     .button-group {
       display: flex;
       gap: 10px;
@@ -111,6 +137,7 @@
     <div class="button-group">
       <button id="randomizeBtn" class="primary-btn">🎲 ランダム</button>
       <button id="downloadBtn" class="accent-btn">📥 ダウンロード</button>
+      <button id="manualBtn" class="text-btn">📖 使い方を見る</button>
     </div>
     <div class="button-group">
       <button id="headPrevBtn" class="secondary-btn">⬅️ 頭</button>
@@ -129,9 +156,9 @@
     <input type="file" id="uploadBackground" accept="image/*" style="display: none;">
     <button id="changePhraseBtn" class="text-btn">✨ 新しいフレーズを見る</button>
   </div>
-
+  <div class="phrase-box">
   <div id="phrase">フレーズがここに表示されます...</div>
-
+</div>
   <script>
     // プリロード用のImageオブジェクト格納用配列
     const headImages = [];
@@ -288,6 +315,18 @@
       reader.readAsDataURL(file);
     }
 
+    // Twitterでシェアする関数
+    function shareOnTwitter() {
+      const tweetText = encodeURIComponent("私のオリジナルキャラクターを作りました！ #キャラクター作成");
+      const url = `https://twitter.com/intent/tweet?text=${tweetText}`;
+      window.open(url, "_blank");
+    }
+
+    // マニュアルページに遷移する関数
+    function navigateToManual() {
+      window.location.href = "manual.html"; // マニュアルページへのリンク
+    }
+
     // ボタンへのイベントリスナー登録
     document.getElementById("randomizeBtn").addEventListener("click", randomize);
     document.getElementById("headPrevBtn").addEventListener("click", () => changePart('head', -1));
@@ -303,6 +342,7 @@
       const category = Math.random() < 0.5 ? 'inspirational' : 'empathetic'; // ランダムにカテゴリを選択
       displayRandomPhrase(category);
     });
+    document.getElementById("manualBtn").addEventListener("click", navigateToManual); // マニュアルページへ遷移
 
     // 初期化
     loadBackgrounds(); // 背景画像を読み込む
