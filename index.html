@@ -3,54 +3,148 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>キャラクター組み合わせ (改善版)</title>
+  <title>キャラクター組み合わせ (洗練版)</title>
   <style>
+    /* 全体のスタイル */
     body {
       text-align: center;
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #444;
     }
     #canvas {
-      border: 1px solid #ccc;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       margin-top: 20px;
-    }
-    .controls {
-      margin-top: 10px;
+      background-color: #fff;
     }
     #selectedParts {
-      margin-top: 10px;
-      font-size: 18px;
+      margin-top: 15px;
+      font-size: 1rem;
       font-weight: bold;
+      color: #555;
+    }
+    #phrase {
+      margin-top: 20px;
+      font-size: 1rem;
+      color: #777;
+      font-style: italic;
+    }
+
+    /* ボタンのスタイル */
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .primary-btn {
+      background-color: #007bff;
+      color: #fff;
+    }
+    .secondary-btn {
+      background-color: #6c757d;
+      color: #fff;
+    }
+    .accent-btn {
+      background-color: #28a745;
+      color: #fff;
+    }
+    .text-btn {
+      background-color: transparent;
+      color: #007bff;
+      border: 1px solid #007bff;
+      padding: 8px 16px;
+    }
+
+    /* レスポンシブデザイン */
+    @media (max-width: 600px) {
+      .button-group {
+        flex-direction: column;
+        align-items: center;
+      }
+      button {
+        width: 100%;
+        max-width: 200px;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>キャラクター組み合わせ (改善版)</h1>
+  <h1>ジュクチョウクンじぇねれーたー</h1>
   <canvas id="canvas" width="300" height="200"></canvas>
-  <div id="selectedParts">頭: head_1, 体: body_1</div>
-  <div class="controls">
-    <button id="randomizeBtn">🎲 ランダム</button>
-    <br>
-    <button id="headPrevBtn">⬅️ 頭</button>
-    <button id="headNextBtn">頭 ➡️</button>
-    <br>
-    <button id="bodyPrevBtn">⬅️ 体</button>
-    <button id="bodyNextBtn">体 ➡️</button>
-  </div>
-  <button id="downloadBtn">📥 ダウンロード</button>
+  <div id="selectedParts">頭: head_1, 体: body_1, 背景: bg1</div>
   
+  <!-- コントロールボタン -->
+  <div class="controls">
+    <div class="button-group">
+      <button id="randomizeBtn" class="primary-btn">🎲 ランダム</button>
+      <button id="downloadBtn" class="accent-btn">📥 ダウンロード</button>
+    </div>
+    <div class="button-group">
+      <button id="headPrevBtn" class="secondary-btn">⬅️ 頭</button>
+      <button id="headNextBtn" class="secondary-btn">頭 ➡️</button>
+    </div>
+    <div class="button-group">
+      <button id="bodyPrevBtn" class="secondary-btn">⬅️ 体</button>
+      <button id="bodyNextBtn" class="secondary-btn">体 ➡️</button>
+    </div>
+    <div class="button-group">
+      <button id="bgPrevBtn" class="secondary-btn">⬅️ 背景</button>
+      <button id="bgNextBtn" class="secondary-btn">背景 ➡️</button>
+      <button id="bgClearBtn" class="secondary-btn">背景を無しにする</button>
+    </div>
+    <label for="uploadBackground" class="text-btn">🖼️ 背景をアップロード</label>
+    <input type="file" id="uploadBackground" accept="image/*" style="display: none;">
+    <button id="changePhraseBtn" class="text-btn">✨ 新しいフレーズを見る</button>
+  </div>
+
+  <div id="phrase">フレーズがここに表示されます...</div>
+
   <script>
-    // 画像枚数（実際の画像数と一致させる）
-    const headCount = 21; // 画像の最大番号
-    const bodyCount = 14; // 画像の最大番号
-    
     // プリロード用のImageオブジェクト格納用配列
     const headImages = [];
     const bodyImages = [];
+    const backgroundImages = [];
     let headIndex = 0;
     let bodyIndex = 0;
+    let backgroundIndex = -1; // 初期値を -1 に設定（背景無し）
+    // JSON データを保持する変数
+    let phrasesData = null;
 
     // ヘッド画像をプリロード
-    for (let i = 1; i <= headCount; i++) {
+    for (let i = 1; i <= 21; i++) {
       if ([10, 11].includes(i)) continue; // head_10.png, head_11.png がないのでスキップ
       const img = new Image();
       img.src = `heads/head_${i}.png`;
@@ -58,11 +152,27 @@
     }
 
     // ボディ画像をプリロード
-    for (let i = 1; i <= bodyCount; i++) {
+    for (let i = 1; i <= 14; i++) {
       if ([10].includes(i)) continue; // body_10.png がないのでスキップ
       const img = new Image();
-      img.src = `bodies/body_${i}.png`; // フォルダ名を "bodies" に修正
+      img.src = `bodies/body_${i}.png`;
       bodyImages.push(img);
+    }
+
+    // 背景画像を動的にプリロード
+    function loadBackgrounds() {
+      const maxBackgroundCount = 20; // 最大試行回数（適当な上限）
+      for (let i = 1; i <= maxBackgroundCount; i++) {
+        const img = new Image();
+        img.src = `bg/bg${i}.png`; // ファイル名を bg1.png, bg2.png の形式に変更
+        img.onload = () => {
+          backgroundImages.push(img);
+          console.log(`背景画像 bg/bg${i}.png を読み込みました。`);
+        };
+        img.onerror = () => {
+          console.warn(`背景画像 bg/bg${i}.png が見つかりませんでした。`);
+        };
+      }
     }
 
     const canvas = document.getElementById("canvas");
@@ -71,23 +181,28 @@
     // キャラクター描画関数
     function drawCharacter() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // 画像が読み込み済みかチェック。未読み込みなら少し待つ
+
+      // 背景描画
+      if (backgroundIndex >= 0 && backgroundImages[backgroundIndex]?.complete) {
+        ctx.drawImage(backgroundImages[backgroundIndex], 0, 0, canvas.width, canvas.height);
+      }
+
+      // キャラクター描画
       if (!headImages[headIndex].complete || !bodyImages[bodyIndex].complete) {
         setTimeout(drawCharacter, 50);
         return;
       }
-
-      // ここでは、まず body を描いて、その上に head を描画
-      ctx.drawImage(headImages[headIndex], 60, 30, 150, 150);
-      ctx.drawImage(bodyImages[bodyIndex], 60, 30, 150, 150);
+      ctx.drawImage(headImages[headIndex], 60, 30, 195, 195);
+      ctx.drawImage(bodyImages[bodyIndex], 60, 30, 195, 195);
 
       updateSelectedParts();
     }
 
     // 選択中のパーツ表示更新
     function updateSelectedParts() {
-      document.getElementById("selectedParts").innerText = `頭: head_${headIndex + 1}, 体: body_${bodyIndex + 1}`;
+      const backgroundName = backgroundIndex >= 0 ? `bg${backgroundIndex + 1}` : "なし";
+      document.getElementById("selectedParts").innerText = 
+        `頭: head_${headIndex + 1}, 体: body_${bodyIndex + 1}, 背景: ${backgroundName}`;
     }
 
     // パーツ変更関数
@@ -96,7 +211,16 @@
         headIndex = (headIndex + delta + headImages.length) % headImages.length;
       } else if (part === 'body') {
         bodyIndex = (bodyIndex + delta + bodyImages.length) % bodyImages.length;
+      } else if (part === 'background') {
+        if (backgroundImages.length === 0) return; // 背景画像がない場合は何もしない
+        backgroundIndex = (backgroundIndex + delta + backgroundImages.length) % backgroundImages.length;
       }
+      drawCharacter();
+    }
+
+    // 背景を無しにする関数
+    function clearBackground() {
+      backgroundIndex = -1; // 背景無し状態を表す
       drawCharacter();
     }
 
@@ -104,6 +228,9 @@
     function randomize() {
       headIndex = Math.floor(Math.random() * headImages.length);
       bodyIndex = Math.floor(Math.random() * bodyImages.length);
+      if (backgroundImages.length > 0) {
+        backgroundIndex = Math.floor(Math.random() * backgroundImages.length);
+      }
       drawCharacter();
     }
 
@@ -115,17 +242,73 @@
       link.click();
     }
 
+    // フレーズを表示する関数
+    function displayRandomPhrase(category) {
+      if (!phrasesData) {
+        console.error("フレーズデータが読み込まれていません。");
+        return;
+      }
+      const phrases = phrasesData[category];
+      if (!phrases || phrases.length === 0) {
+        console.error(`カテゴリ '${category}' にフレーズがありません。`);
+        return;
+      }
+      const randomIndex = Math.floor(Math.random() * phrases.length);
+      const phrase = phrases[randomIndex].phrase;
+      document.getElementById("phrase").innerText = phrase;
+    }
+
+    // JSON ファイルを読み込む関数
+    async function loadPhrases() {
+      try {
+        const response = await fetch('phrases.json'); // JSON ファイルを読み込む
+        phrasesData = await response.json(); // データを解析
+        console.log("フレーズデータを読み込みました:", phrasesData);
+        displayRandomPhrase('inspirational'); // 初期表示
+      } catch (error) {
+        console.error("フレーズデータの読み込みに失敗しました:", error);
+      }
+    }
+
+    // 背景画像をアップロードする関数
+    function uploadBackground(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.src = reader.result;
+        img.onload = () => {
+          backgroundImages.push(img); // アップロードした画像を配列に追加
+          backgroundIndex = backgroundImages.length - 1; // 最新の背景を選択
+          drawCharacter(); // 描画更新
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+
     // ボタンへのイベントリスナー登録
     document.getElementById("randomizeBtn").addEventListener("click", randomize);
     document.getElementById("headPrevBtn").addEventListener("click", () => changePart('head', -1));
     document.getElementById("headNextBtn").addEventListener("click", () => changePart('head', 1));
     document.getElementById("bodyPrevBtn").addEventListener("click", () => changePart('body', -1));
     document.getElementById("bodyNextBtn").addEventListener("click", () => changePart('body', 1));
+    document.getElementById("bgPrevBtn").addEventListener("click", () => changePart('background', -1));
+    document.getElementById("bgNextBtn").addEventListener("click", () => changePart('background', 1));
+    document.getElementById("bgClearBtn").addEventListener("click", clearBackground); // 背景無しボタン
     document.getElementById("downloadBtn").addEventListener("click", downloadImage);
+    document.getElementById("uploadBackground").addEventListener("change", uploadBackground);
+    document.getElementById("changePhraseBtn").addEventListener("click", () => {
+      const category = Math.random() < 0.5 ? 'inspirational' : 'empathetic'; // ランダムにカテゴリを選択
+      displayRandomPhrase(category);
+    });
 
-    // すべての画像が読み込まれたら初回描画
+    // 初期化
+    loadBackgrounds(); // 背景画像を読み込む
+    loadPhrases(); // フレーズデータを読み込む
     window.onload = () => {
-      drawCharacter();
+      drawCharacter(); // 初回描画
     };
   </script>
 </body>
