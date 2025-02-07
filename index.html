@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>キャラクター組み合わせ (改善版)</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+    #canvas {
+      border: 1px solid #ccc;
+      margin-top: 20px;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+    #selectedParts {
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>キャラクター組み合わせ (改善版)</h1>
+  <canvas id="canvas" width="300" height="200"></canvas>
+  <div id="selectedParts">頭: head_1, 体: body_1</div>
+  <div class="controls">
+    <button id="randomizeBtn">🎲 ランダム</button>
+    <br>
+    <button id="headPrevBtn">⬅️ 頭</button>
+    <button id="headNextBtn">頭 ➡️</button>
+    <br>
+    <button id="bodyPrevBtn">⬅️ 体</button>
+    <button id="bodyNextBtn">体 ➡️</button>
+  </div>
+  <button id="downloadBtn">📥 ダウンロード</button>
+  
+  <script>
+    // 画像枚数（実際の画像数と一致させる）
+    const headCount = 21; // 画像の最大番号
+    const bodyCount = 14; // 画像の最大番号
+    
+    // プリロード用のImageオブジェクト格納用配列
+    const headImages = [];
+    const bodyImages = [];
+    let headIndex = 0;
+    let bodyIndex = 0;
+
+    // ヘッド画像をプリロード
+    for (let i = 1; i <= headCount; i++) {
+      if ([10, 11].includes(i)) continue; // head_10.png, head_11.png がないのでスキップ
+      const img = new Image();
+      img.src = `heads/head_${i}.png`;
+      headImages.push(img);
+    }
+
+    // ボディ画像をプリロード
+    for (let i = 1; i <= bodyCount; i++) {
+      if ([10].includes(i)) continue; // body_10.png がないのでスキップ
+      const img = new Image();
+      img.src = `bodies/body_${i}.png`; // フォルダ名を "bodies" に修正
+      bodyImages.push(img);
+    }
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // キャラクター描画関数
+    function drawCharacter() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // 画像が読み込み済みかチェック。未読み込みなら少し待つ
+      if (!headImages[headIndex].complete || !bodyImages[bodyIndex].complete) {
+        setTimeout(drawCharacter, 50);
+        return;
+      }
+
+      // ここでは、まず body を描いて、その上に head を描画
+      ctx.drawImage(headImages[headIndex], 60, 30, 150, 150);
+      ctx.drawImage(bodyImages[bodyIndex], 60, 30, 150, 150);
+
+      updateSelectedParts();
+    }
+
+    // 選択中のパーツ表示更新
+    function updateSelectedParts() {
+      document.getElementById("selectedParts").innerText = `頭: head_${headIndex + 1}, 体: body_${bodyIndex + 1}`;
+    }
+
+    // パーツ変更関数
+    function changePart(part, delta) {
+      if (part === 'head') {
+        headIndex = (headIndex + delta + headImages.length) % headImages.length;
+      } else if (part === 'body') {
+        bodyIndex = (bodyIndex + delta + bodyImages.length) % bodyImages.length;
+      }
+      drawCharacter();
+    }
+
+    // ランダム選択関数
+    function randomize() {
+      headIndex = Math.floor(Math.random() * headImages.length);
+      bodyIndex = Math.floor(Math.random() * bodyImages.length);
+      drawCharacter();
+    }
+
+    // 画像をダウンロードする関数
+    function downloadImage() {
+      const link = document.createElement('a');
+      link.download = 'character.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    // ボタンへのイベントリスナー登録
+    document.getElementById("randomizeBtn").addEventListener("click", randomize);
+    document.getElementById("headPrevBtn").addEventListener("click", () => changePart('head', -1));
+    document.getElementById("headNextBtn").addEventListener("click", () => changePart('head', 1));
+    document.getElementById("bodyPrevBtn").addEventListener("click", () => changePart('body', -1));
+    document.getElementById("bodyNextBtn").addEventListener("click", () => changePart('body', 1));
+    document.getElementById("downloadBtn").addEventListener("click", downloadImage);
+
+    // すべての画像が読み込まれたら初回描画
+    window.onload = () => {
+      drawCharacter();
+    };
+  </script>
+</body>
+</html>
